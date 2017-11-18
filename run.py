@@ -8,13 +8,14 @@ CONN = sqlalchemy.create_engine('sqlite:///data.db')
 app = create_app("development")
 
 database_fields = {
-    "player_stats":[ 'player_id',
+    "player_stats":['player_id',
                      'full_name',
                      'first_name',
                      'last_name',
-                     'team',
+                     'player_stats.team',
                      'games_played',
                      'minutes',
+                     'position',
                      'pull_up_shots_points_per_game',
                      'pull_up_field_goals_made_per_game',
                      'pull_up_field_goals_attempted_per_game',
@@ -110,14 +111,14 @@ def hello_world():
 #10116
 @app.route('/player/<int:player_id>')
 def get_player(player_id):
-    fields = ["player_id","full_name","minutes","pull_up_field_goal_percentage"]
+    fields = ["player_id","full_name","minutes","pull_up_field_goal_percentage","position"]
     return select_with_id(fields, player_id)
 
 
 @app.route('/teams/<team>')
 def get_team_players(team):
     fields = database_fields['player_stats']
-    query = text("select " + ','.join(fields) + " from player_stats where team = :t")
+    query = text("select " + ','.join(fields) + " from player_stats inner join season_stats ss on ss.name = player_stats.full_name where player_stats.team = :t")
     players = CONN.execute(query,t=team).fetchall()
     return jsonify([map_keys_to_values(fields, player) for player in players])
 
@@ -128,11 +129,11 @@ def map_keys_to_values(keys, values):
 
 
 def select_with_id(fields, player_id):
-    query = text('select '+", ".join(fields)+' from player_stats where player_id = :p')
+    query = text('select '+", ".join(fields)+' from player_stats ps inner join season_stats ss on ss.name = ps.full_name where ps.player_id = :p ')
     player = CONN.execute(query, p=player_id).fetchone()
     player_dict = { key:value for key, value in zip(fields, player) }
     return jsonify(player_dict)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8886))
-    app.run(host='0.0.0.0', port=port)
+    app.run()
