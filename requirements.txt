@@ -1,0 +1,7 @@
+sqlalchemy==1.1.15
+Flask==0.12.2
+Werkzeug==0.12.2
+itsdangerous==0.24
+click==6.7
+jinja2==2.10
+markupsafe==1.0
