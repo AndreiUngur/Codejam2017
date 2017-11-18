@@ -1,6 +1,7 @@
 sqlalchemy==1.1.15
-Flask==0.12.2
-Flask-API==1.0
+flask==0.12.2
+flask_api==1.0
+flask_sqlalchemy==2.3.2
 Werkzeug==0.12.2
 itsdangerous==0.24
 click==6.7
