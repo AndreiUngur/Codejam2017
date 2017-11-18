@@ -2,3 +2,4 @@
 datasets/
 .ipynb_*
 Untitled*
+__pycache__/*
