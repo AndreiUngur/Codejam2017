@@ -139,7 +139,7 @@ def get_player_percentage_from_zone(player_id):
 @app.route('/teams/<team>')
 def get_team_players(team):
     fields = database_fields['player_stats']
-    query = text("select " + ','.join(fields) + " from player_stats inner join season_stats ss on ss.name = player_stats.full_name where player_stats.team = :t")
+    query = text("select distinct " + ','.join(fields) + " from player_stats inner join season_stats ss on ss.name = player_stats.full_name where player_stats.team = :t")
     players = CONN.execute(query,t=team).fetchall()
     return jsonify([map_keys_to_values(fields, player) for player in players])
 
@@ -152,7 +152,7 @@ def map_keys_to_values(keys, values):
 
 
 def select_with_id(fields, player_id):
-    query = text('select '+", ".join(fields)+' from player_stats ps inner join season_stats ss on ss.name = ps.full_name where ps.player_id = :p ')
+    query = text('select distinct '+", ".join(fields)+' from player_stats ps inner join season_stats ss on ss.name = ps.full_name where ps.player_id = :p ')
     player = CONN.execute(query, p=player_id).fetchone()
     player_dict = { key:value for key, value in zip(fields, player) }
     return jsonify(player_dict)
