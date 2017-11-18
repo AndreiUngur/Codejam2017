@@ -1,8 +1,10 @@
 from app import create_app
-from flask import jsonify
+from flask import jsonify, request
 import sqlalchemy
 import os
 from sqlalchemy.sql import text
+from exceptions import InvalidUsage
+import math
 
 CONN = sqlalchemy.create_engine('sqlite:///data.db')
 app = create_app("development")
@@ -107,11 +109,30 @@ def index():
 def hello_world():
     return 'Ok!'
 
-#10116
 @app.route('/player/<int:player_id>')
 def get_player(player_id):
     fields = ["player_id","full_name","minutes","pull_up_field_goal_percentage"]
     return select_with_id(fields, player_id)
+
+
+@app.route('/player/<int:player_id>/zone',methods=['POST'])
+def get_player_percentage_from_zone(player_id):
+    if "x" not in request.form or "y" not in request.form:
+        raise InvalidUsage('Missing x or y parameter in post request', status_code = 422)
+
+    x = request.form['x']
+    y = request.form['y']
+
+    try:
+        x = float(x)
+        y = float(y)
+    except ValueError:
+        raise InvalidUsage('Must pass x and y as valid float values', status_code= 402)
+
+    euclidean_distance = math.sqrt(math.pow(x,2) + math.pow(y,2))
+    return jsonify({"player_id": player_id,
+            "euclidean_distance":euclidean_distance})
+
 
 
 @app.route('/teams/<team>')
@@ -120,6 +141,8 @@ def get_team_players(team):
     query = text("select " + ','.join(fields) + " from player_stats where team = :t")
     players = CONN.execute(query,t=team).fetchall()
     return jsonify([map_keys_to_values(fields, player) for player in players])
+
+
 
 def map_keys_to_values(keys, values):
     return {key : value for key, value in zip(keys, values)}
@@ -132,6 +155,14 @@ def select_with_id(fields, player_id):
     player = CONN.execute(query, p=player_id).fetchone()
     player_dict = { key:value for key, value in zip(fields, player) }
     return jsonify(player_dict)
+
+
+
+@app.errorhandler(InvalidUsage)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8886))
