@@ -1,6 +1,7 @@
 from app import create_app
 from flask import jsonify
 import sqlalchemy
+import os
 from sqlalchemy.sql import text
 
 CONN = sqlalchemy.create_engine('sqlite:///data.db')
