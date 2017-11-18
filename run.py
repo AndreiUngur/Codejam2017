@@ -1,5 +1,7 @@
 from app import create_app
+import sqlalchemy
 
+CONN = sqlalchemy.create_engine('sqlite:///test.db')
 app = create_app("development")
 
 @app.route('/')
