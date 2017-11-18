@@ -136,4 +136,4 @@ def select_with_id(fields, player_id):
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8886))
-    app.run()
+    app.run(host='0.0.0.0', port=port)
