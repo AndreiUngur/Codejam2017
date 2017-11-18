@@ -1,0 +1,25 @@
+- minutes played + aggressiveness VERSUS injury rate?
+
+- Input : teams/players you want, get back an "ultimate team" which fits what you want
+
+------------------------------------------------------------
+- take in stats like FG %, etc. then determine: What's the probability that a play works?
+
+- ----------------------------------------------------------
+
+IDEA:
+  -> User decides which players he wants and where he wants them on the court
+
+  -> System weighs years (so newer "stats" are worth more)
+  
+MVP:
+
+- UI
+  -> Field
+  -> Search bar with player names
+  -> Collect info about the player from some sports API and return basic info (headshot, basic info)
+  -> Drag & Drop capability with heads
+  -> Send which "zone" the player is in
+
+- Data handling
+  -> MVP : Get zone info and return that player's data for that specific zone
