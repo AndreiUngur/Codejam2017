@@ -1,5 +1,7 @@
 # Code Jam - DataDive - Ballr
 
+![Boston Celtics Huddle of Players](https://github.com/AndreiUngur/Codejam2017/blob/master/hi-res-183712255-head-coach-brad-stevens-of-the-boston-celtics-meets_crop_650.jpg "Boston Celtics Huddle of Players")
+
 ## Category 
 Sports
 
