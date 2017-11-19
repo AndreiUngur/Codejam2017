@@ -7,12 +7,24 @@ from exceptions import InvalidUsage
 import math
 import operator
 import zones
+import playerrecommend
+from playerrecommend import season_stats_fields as ssf
+import random
+ssf.append('Name')
 
 CONN = sqlalchemy.create_engine('sqlite:///data.db')
 app = create_app("development")
 
 #Constants
 possible_zones = ['Above the Break 3', 'Backcourt','In The Paint (Non-RA)','Left Corner 3','Mid-Range','Restricted Area','Right Corner 3']
+coordinates = {'Above the Break 3': [0,22],
+                'Backcourt': [30,30],
+                'In The Paint (Non-RA)': [0,5],
+                'Left Corner 3': [-22,0],
+                'Mid-Range': [-15,15],
+                'Restricted Area': [5,5],
+                'Right Corner 3': [22,0]}
+
 averages = {'Above the Break 3': 0.34,
                 'Backcourt': 0.026,
                 'In The Paint (Non-RA)': 0.40375,
@@ -130,15 +142,14 @@ def get_player(player_id):
 
 def get_zone_stats(player_id, shot_zone):
     query = text('select count from player_stats_by_zone where player_id = :p and zone = :shot_zone and event=:made_shot')
-    shots = {}
-    shots['made_shots'] = CONN.execute(query, p=player_id, shot_zone=shot_zone,made_shot='Made Shot').fetchone()
-    shots['missed_shots'] = CONN.execute(query, p=player_id, shot_zone=shot_zone, made_shot='Missed Shot').fetchone()
-    
-    if not shots['made_shots'] or not shots['missed_shots']:
+    made_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone,made_shot='Made Shot').fetchone()
+    missed_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone, made_shot='Missed Shot').fetchone()
+    zone_stats = {}
+    if not made_shots or not missed_shots:
         raise InvalidUsage('Could not find this player', status_code = 402)
 
-    made_shots = int(shots['made_shots'].count)
-    missed_shots = int(shots['missed_shots'].count)
+    made_shots = int(made_shots.count)
+    missed_shots = int(missed_shots.count)
     
     try:
         zone_stats['percentage_success'] = made_shots / (made_shots + missed_shots)
@@ -148,14 +159,11 @@ def get_zone_stats(player_id, shot_zone):
     zone_stats['percent_difference_average'] = zone_stats['percentage_success'] - averages[shot_zone]
     return zone_stats
 
-def findmax(pref_zones):
-    max = -1
-    max_zone = ""
+def find_key(percentage,stats):
     for zone in possible_zones:
-        if (pref_zones[zone] > max):
-            max_zone = zone
-            max = pref_zones[zone]
-    return max_zone
+        if(stats[zone] == percentage):
+            return zone
+    return possible_zones[random.randint(0,5)]
 
 @app.route('/player/<int:player_id>/zone',methods=['POST'])
 def get_player_percentage_from_zone(player_id):
@@ -176,25 +184,33 @@ def get_player_percentage_from_zone(player_id):
     zone_stats = {}
     try:
         zone_stats = get_zone_stats(player_id, shot_zone)
-    except:
+    except Exception as e:
+        print(e)
         zone_stats['percentage_difference_average'] = -1
         zone_stats['percentage_success'] = -1
 
     per_zone_stats = {}
     for zone in possible_zones:
         try:
-            per_zone_stats[zone] = get_zone_stats(player_id,zone)
-        except:
-            print("No data!")
+            per_zone_stats[zone] = get_zone_stats(player_id,zone)["percentage_difference_average"]
+        except Exception as e:
+            print(zone)
+            print(e)
             per_zone_stats[zone] = 0
 
-    preferred_zone = findmax(per_zone_stats)
-
+    max_percentage = max(per_zone_stats.values())
+    max_zone = find_key(max_percentage,per_zone_stats)
+    print(max_zone)
+    coordinates[max_zone][0] += random.uniform(0,3)
+    coordinates[max_zone][1] += random.uniform(0,3)
+    
     return jsonify({"player_id": player_id,
                     "percentage_success":zone_stats['percentage_success'],
                     "percent_difference_average":zone_stats['percentage_difference_average'],
                     "zone":shot_zone,
-                    "preferred_zone":preferred_zone})
+                    "preferred_zone":max_zone,
+                    "preferred_zone_percentage":max_percentage,
+                    "coordinates":coordinates[max_zone]})
 
 @app.route('/teams/<team>')
 def get_team_players(team):
@@ -203,6 +219,14 @@ def get_team_players(team):
     players = CONN.execute(query,t=team).fetchall()
     return jsonify([map_keys_to_values(fields, player) for player in players])
 
+@app.route('/recommend/<player_name>')
+def get_recommendation(player_name):
+    if not player_name:
+        return "Please enter a player name."
+    query = text('select distinct '+", ".join(ssf)+' from season_stats where name = :n')
+    player = CONN.execute(query, n=player_name).fetchone()
+    cluster = get_cluster(player)
+    return cluster
 
 def map_keys_to_values(keys, values):
     return {key : value for key, value in zip(keys, values)}
@@ -223,5 +247,6 @@ def handle_invalid_usage(error):
     return response
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8886))
-    app.run(host='0.0.0.0', port=port)
+    #port = int(os.environ.get("PORT", 8886))
+    #app.run(host='0.0.0.0', port=port)
+    app.run()
