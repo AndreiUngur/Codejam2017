@@ -47,4 +47,4 @@ def load_KMeans():
 season_clusters = load_KMeans()
 
 def get_cluster(player):
-    return season_clusters.fit_predict([player])
+    return season_clusters.fit_predict([player,player,player,player,player,player])

@@ -240,7 +240,7 @@ def get_recommendation(player_name):
     player = CONN.execute(query, n=player_name).fetchone()
     player = [float(item) for item in player if isfloat(item)]
     cluster = playerrecommend.get_cluster(player)
-    return cluster
+    return jsonify(cluster.tolist())
 
 def map_keys_to_values(keys, values):
     return {key : value for key, value in zip(keys, values)}
@@ -261,6 +261,6 @@ def handle_invalid_usage(error):
     return response
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8886))
-    app.run(host='0.0.0.0', port=port)
-    #app.run()
+    #port = int(os.environ.get("PORT", 8886))
+    #app.run(host='0.0.0.0', port=port)
+    app.run()
