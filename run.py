@@ -7,9 +7,9 @@ from exceptions import InvalidUsage
 import math
 import operator
 import zones
-#import playerrecommend
-#from playerrecommend import season_stats_fields as ssf
-#ssf.append('Name')
+import playerrecommend
+from playerrecommend import season_stats_fields as ssf
+ssf.append('Name')
 import random
 
 CONN = sqlalchemy.create_engine('sqlite:///data.db')
@@ -225,16 +225,23 @@ def get_team_players(team):
     players = CONN.execute(query,t=team).fetchall()
     return jsonify([map_keys_to_values(fields, player) for player in players])
 
-'''
+def isfloat(string):
+    try:
+        float(string)
+        return True
+    except:
+        return False
+
 @app.route('/recommend/<player_name>')
 def get_recommendation(player_name):
     if not player_name:
         return "Please enter a player name."
-    query = text('select distinct '+", ".join(ssf)+' from season_stats where name = :n')
+    query = text('select distinct '+", ".join(ssf)+' from season_stats where Name = :n')
     player = CONN.execute(query, n=player_name).fetchone()
-    cluster = get_cluster(player)
+    player = [float(item) for item in player if isfloat(item)]
+    cluster = playerrecommend.get_cluster(player)
     return cluster
-'''
+
 def map_keys_to_values(keys, values):
     return {key : value for key, value in zip(keys, values)}
 

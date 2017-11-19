@@ -9,25 +9,24 @@ from sklearn.cluster import KMeans
 CONN = sqlalchemy.create_engine('sqlite:///data.db')
 season_stats_df = pd.read_sql('select * from season_stats',CONN)
 
-season_stats_fields = ['Year', 'Age', 'Games Played',
-       'Games Started', 'Minutes Per Game', 'Player Efficiency Rating ',
-       'True Shooting Percentage', '3 Point Attempted Rate', 'Free Throw Rate',
-       'Offensive Rebound Percentage', 'Defensive Rebound Percentage',
-       'True Rebounding Percentage', 'Assist Percentage', 'Steal Percentage',
-       'Block Percentage', 'Turn Over Percentage', 'Usage Rate', 'Unnamed: 21',
-       'Offensive Win Shares', 'Defensive Win Shares', 'Win Shares',
-       'Win Shares Per 48 Minutes', 'Unnamed: 26',
-       'Offensive Basketball Plus Minus', 'Defensive Basketball Plus Minus',
-       'Basketball Plus Minus', 'Value Over Replacement Player',
-       'Field Goals Made', 'Field Goals Attempted', 'Field Goal Percentage',
-       'Three Point Field Goals Made', 'Three Point Field Goals Attempted',
-       'Three Point Field Goal Percentage', 'Two Point Field Goals Made',
-       'Two Point Field Goals Attempted', 'Two Point Field Goal Percentage',
-       'Effective Field Goal Percentage', 'Free Throws Made',
-       'Free Throws Attempted', 'Free Throw Percentage', 'Offensive Rebounds',
-       'Defensive Rebounds', 'Total Rebounds', 'Total Assists', 'Total Steals',
-       'Total Blocks', 'Total Turnovers', 'Total Personal Fouls',
-       'Total Points']
+season_stats_fields = ['year', 'age', 'games_played',
+       'games_started', 'minutes_per_game', 'player_efficiency_rating',
+       'true_shooting_percentage', 'free_throw_rate',
+       'offensive_rebound_percentage', 'defensive_rebound_percentage',
+       'true_rebounding_percentage', 'assist_percentage', 'steal_percentage',
+       'block_percentage', 'turn_over_percentage', 'usage_rate',
+       'offensive_win_shares', 'defensive_win_shares', 'win_shares',
+       'offensive_basketball_plus_minus', 'defensive_basketball_plus_minus',
+       'basketball_plus_minus', 'value_over_replacement_player',
+       'field_goals_made', 'field_goals_attempted', 'field_goal_percentage',
+       'three_point_field_goals_made', 'three_point_field_goals_attempted',
+       'three_point_field_goal_percentage', 'two_point_field_goals_made',
+       'two_point_field_goals_attempted', 'two_point_field_goal_percentage',
+       'effective_field_goal_percentage', 'free_throws_made',
+       'free_throws_attempted', 'free_throw_percentage', 'offensive_rebounds',
+       'defensive_rebounds', 'total_rebounds', 'total_assists', 'total_steals',
+       'total_blocks', 'total_turnovers', 'total_personal_fouls',
+       'total_points']
 
 def get_seasonstats_means():
     seasonstats_means = season_stats_df[season_stats_fields]
@@ -48,8 +47,4 @@ def load_KMeans():
 season_clusters = load_KMeans()
 
 def get_cluster(player):
-    '''
-    Will classify the shot using a decision tree. Pass the X and Y
-    value here.
-    '''
     return season_clusters.fit_predict([player])
