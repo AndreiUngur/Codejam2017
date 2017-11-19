@@ -32,7 +32,7 @@ While a whiteboard serves the purpose of communicating when and where players sh
 
 ## Our Solution
 
-![Screenshot](https://github.com/AndreiUngur/Codejam2017/blob/master/23772242_10212915047806745_1614297750_n.png "Screenshot of our project")
+![Screenshot](https://github.com/AndreiUngur/Codejam2017/blob/master/Screen%20Shot%202017-11-19%20at%2010.52.26%20AM.png "Screenshot of our project")
 
 
 We designed a simple prototype web application over the weekend to demonstrate the potential of a virtual play whiteboard. We choose this interface to appeal to the target market of NBA coaches and basketball players. 
