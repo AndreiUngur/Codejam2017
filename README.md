@@ -30,7 +30,7 @@ While a whiteboard serves the purpose of communicating when and where players sh
 
 ## Our Solution
 
-![Sample Image](http://nikonrumors.com/wp-content/uploads/2014/03/Nikon-1-V3-sample-photo.jpg "Sample Dew Drops Image")
+![Screenshot](https://github.com/AndreiUngur/Codejam2017/blob/master/23772242_10212915047806745_1614297750_n.png "Screenshot of our project")
 
 
 
