@@ -157,8 +157,10 @@ def get_zone_stats(player_id, shot_zone):
         zone_stats[percent_succ] = made_shots / (made_shots + missed_shots)
     except ZeroDivisionError:
         zone_stats[percent_succ] = 0.0
-    
-    zone_stats[percent_diff_avg] = zone_stats[percent_succ] - averages[shot_zone]
+    try:
+        zone_stats[percent_diff_avg] = (zone_stats[percent_succ] - averages[shot_zone]) / (averages[shot_zone]) 
+    except ZeroDivisionError:
+        zone_stats[percent_diff_avg] = 0.0
     return zone_stats
 
 def find_key(percentage,stats):
