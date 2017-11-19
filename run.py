@@ -157,8 +157,10 @@ def get_zone_stats(player_id, shot_zone):
         zone_stats[percent_succ] = made_shots / (made_shots + missed_shots)
     except ZeroDivisionError:
         zone_stats[percent_succ] = 0.0
-    
-    zone_stats[percent_diff_avg] = zone_stats[percent_succ] - averages[shot_zone]
+    try:
+        zone_stats[percent_diff_avg] = (zone_stats[percent_succ] - averages[shot_zone]) / (averages[shot_zone]) 
+    except ZeroDivisionError:
+        zone_stats[percent_diff_avg] = 0.0
     return zone_stats
 
 def find_key(percentage,stats):
@@ -207,16 +209,16 @@ def get_player_percentage_from_zone(player_id):
     print(per_zone_stats)
     max_percentage = max(per_zone_stats.values())
     max_zone = find_key(max_percentage,per_zone_stats)
-    coordinates[max_zone][0] += random.uniform(0,3)
-    coordinates[max_zone][1] += random.uniform(0,3)
+    x_coord = coordinates[max_zone][0] + random.uniform(0,3)
+    y_coord = coordinates[max_zone][1] + random.uniform(0,3)
     
     return jsonify({"player_id": player_id,
                     "percentage_success":zone_stats[percent_succ],
-                    "percent_difference_average":zone_stats[percent_succ],
+                    "percent_difference_average":zone_stats[percent_diff_avg],
                     "zone":shot_zone,
                     "preferred_zone":max_zone,
                     "preferred_zone_percentage":max_percentage,
-                    "coordinates":coordinates[max_zone]})
+                    "coordinates":[x_coord,y_coord]})
 
 @app.route('/teams/<team>')
 def get_team_players(team):
