@@ -5,6 +5,7 @@ import os
 from sqlalchemy.sql import text
 from exceptions import InvalidUsage
 import math
+import zones
 
 CONN = sqlalchemy.create_engine('sqlite:///data.db')
 app = create_app("development")
@@ -124,14 +125,42 @@ def get_player_percentage_from_zone(player_id):
     y = request.form['y']
 
     try:
-        x = float(x)
-        y = float(y)
+        x = float(x) * 10
+        y = float(y) * 10
     except ValueError:
         raise InvalidUsage('Must pass x and y as valid float values', status_code= 402)
 
+    shot_zone = zones.classify_shot(x,y)[0]
     euclidean_distance = math.sqrt(math.pow(x,2) + math.pow(y,2))
+
+    query = text('select count from player_stats_by_zone where player_id = :p and zone = :shot_zone and event=:made_shot')
+    made_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone,made_shot='Made Shot').fetchone()
+    missed_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone, made_shot='Missed Shot').fetchone()
+
+    made_shots = int(made_shots.count)
+    missed_shots = int(missed_shots.count)
+
+
+    averages = {'Above the Break 3': 0.34,
+                'Backcourt': 0.026,
+                'In The Paint (Non-RA)': 0.40375,
+                'Left Corner 3': 0.38,
+                'Mid-Range': 0.39912499999999995,
+                'Restricted Area': 0.601,
+                'Right Corner 3': 0.392}
+
+    try:
+        percentage_success = made_shots / (made_shots + missed_shots)
+    except ZeroDivisionError:
+        percentage_success = 0.0
+
+    percent_difference_average = percentage_success - averages[shot_zone]
+
     return jsonify({"player_id": player_id,
-            "euclidean_distance":euclidean_distance})
+                    "euclidean_distance":euclidean_distance,
+                    "percentage_success":percentage_success,
+                    "percent_difference_average":percent_difference_average,
+                    "zone":shot_zone})
 
 
 
