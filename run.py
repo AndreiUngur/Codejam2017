@@ -5,10 +5,21 @@ import os
 from sqlalchemy.sql import text
 from exceptions import InvalidUsage
 import math
+import operator
 import zones
 
 CONN = sqlalchemy.create_engine('sqlite:///data.db')
 app = create_app("development")
+
+#Constants
+possible_zones = ['Above the Break 3', 'Backcourt','In The Paint (Non-RA)','Left Corner 3','Mid-Range','Restricted Area','Right Corner 3']
+averages = {'Above the Break 3': 0.34,
+                'Backcourt': 0.026,
+                'In The Paint (Non-RA)': 0.40375,
+                'Left Corner 3': 0.38,
+                'Mid-Range': 0.39912499999999995,
+                'Restricted Area': 0.601,
+                'Right Corner 3': 0.392}
 
 database_fields = {
     "player_stats":['player_id',
@@ -117,6 +128,34 @@ def get_player(player_id):
     fields = ["player_id","full_name","minutes","pull_up_field_goal_percentage","position"]
     return select_with_id(fields, player_id)
 
+def get_zone_stats(player_id, shot_zone):
+    query = text('select count from player_stats_by_zone where player_id = :p and zone = :shot_zone and event=:made_shot')
+    shots = {}
+    shots['made_shots'] = CONN.execute(query, p=player_id, shot_zone=shot_zone,made_shot='Made Shot').fetchone()
+    shots['missed_shots'] = CONN.execute(query, p=player_id, shot_zone=shot_zone, made_shot='Missed Shot').fetchone()
+    
+    if not shots['made_shots'] or not shots['missed_shots']:
+        raise InvalidUsage('Could not find this player', status_code = 402)
+
+    made_shots = int(shots['made_shots'].count)
+    missed_shots = int(shots['missed_shots'].count)
+    
+    try:
+        zone_stats['percentage_success'] = made_shots / (made_shots + missed_shots)
+    except ZeroDivisionError:
+        zone_stats['percentage_success'] = 0.0
+
+    zone_stats['percent_difference_average'] = zone_stats['percentage_success'] - averages[shot_zone]
+    return zone_stats
+
+def findmax(pref_zones):
+    max = -1
+    max_zone = ""
+    for zone in possible_zones:
+        if (pref_zones[zone] > max):
+            max_zone = zone
+            max = pref_zones[zone]
+    return max_zone
 
 @app.route('/player/<int:player_id>/zone',methods=['POST'])
 def get_player_percentage_from_zone(player_id):
@@ -134,38 +173,28 @@ def get_player_percentage_from_zone(player_id):
 
     shot_zone = zones.classify_shot(x,y)[0]
     euclidean_distance = math.sqrt(math.pow(x,2) + math.pow(y,2))
-
-    query = text('select count from player_stats_by_zone where player_id = :p and zone = :shot_zone and event=:made_shot')
-    made_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone,made_shot='Made Shot').fetchone()
-    missed_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone, made_shot='Missed Shot').fetchone()
-
-    if not made_shots or not missed_shots:
-        raise InvalidUsage('Could not find this player', status_code = 402)
-
-    made_shots = int(made_shots.count)
-    missed_shots = int(missed_shots.count)
-
-
-    averages = {'Above the Break 3': 0.34,
-                'Backcourt': 0.026,
-                'In The Paint (Non-RA)': 0.40375,
-                'Left Corner 3': 0.38,
-                'Mid-Range': 0.39912499999999995,
-                'Restricted Area': 0.601,
-                'Right Corner 3': 0.392}
-
+    zone_stats = {}
     try:
-        percentage_success = made_shots / (made_shots + missed_shots)
-    except ZeroDivisionError:
-        percentage_success = 0.0
+        zone_stats = get_zone_stats(player_id, shot_zone)
+    except:
+        zone_stats['percentage_difference_average'] = -1
+        zone_stats['percentage_success'] = -1
 
-    percent_difference_average = percentage_success - averages[shot_zone]
+    per_zone_stats = {}
+    for zone in possible_zones:
+        try:
+            per_zone_stats[zone] = get_zone_stats(player_id,zone)
+        except:
+            print("No data!")
+            per_zone_stats[zone] = 0
+
+    preferred_zone = findmax(per_zone_stats)
 
     return jsonify({"player_id": player_id,
-                    "percentage_success":percentage_success,
-                    "percent_difference_average":percent_difference_average,
-                    "zone":shot_zone})
-
+                    "percentage_success":zone_stats['percentage_success'],
+                    "percent_difference_average":zone_stats['percentage_difference_average'],
+                    "zone":shot_zone,
+                    "preferred_zone":preferred_zone})
 
 @app.route('/teams/<team>')
 def get_team_players(team):
