@@ -16,6 +16,8 @@ CONN = sqlalchemy.create_engine('sqlite:///data.db')
 app = create_app("development")
 
 #Constants
+percent_diff_avg = "percent_difference_average"
+percent_succ = "percent_success"
 possible_zones = ['Above the Break 3', 'Backcourt','In The Paint (Non-RA)','Left Corner 3','Mid-Range','Restricted Area','Right Corner 3']
 coordinates = {'Above the Break 3': [0,22],
                 'Backcourt': [30,30],
@@ -144,19 +146,19 @@ def get_zone_stats(player_id, shot_zone):
     query = text('select count from player_stats_by_zone where player_id = :p and zone = :shot_zone and event=:made_shot')
     made_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone,made_shot='Made Shot').fetchone()
     missed_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone, made_shot='Missed Shot').fetchone()
+
     zone_stats = {}
     if not made_shots or not missed_shots:
         raise InvalidUsage('Could not find this player', status_code = 402)
 
     made_shots = int(made_shots.count)
     missed_shots = int(missed_shots.count)
-    
     try:
-        zone_stats['percentage_success'] = made_shots / (made_shots + missed_shots)
+        zone_stats[percent_succ] = made_shots / (made_shots + missed_shots)
     except ZeroDivisionError:
-        zone_stats['percentage_success'] = 0.0
-
-    zone_stats['percent_difference_average'] = zone_stats['percentage_success'] - averages[shot_zone]
+        zone_stats[percent_succ] = 0.0
+    
+    zone_stats[percent_diff_avg] = zone_stats[percent_succ] - averages[shot_zone]
     return zone_stats
 
 def find_key(percentage,stats):
@@ -183,30 +185,34 @@ def get_player_percentage_from_zone(player_id):
     euclidean_distance = math.sqrt(math.pow(x,2) + math.pow(y,2))
     zone_stats = {}
     try:
+        print("checking zone:")
+        print(shot_zone)
         zone_stats = get_zone_stats(player_id, shot_zone)
     except Exception as e:
         print(e)
-        zone_stats['percentage_difference_average'] = -1
-        zone_stats['percentage_success'] = -1
+        zone_stats[percent_diff_avg] = -1
+        zone_stats[percent_succ] = -1
 
     per_zone_stats = {}
     for zone in possible_zones:
         try:
-            per_zone_stats[zone] = get_zone_stats(player_id,zone)["percentage_difference_average"]
+             placeholder = get_zone_stats(player_id,zone)
+             per_zone_stats[zone] = placeholder[percent_diff_avg]
         except Exception as e:
             print(zone)
             print(e)
             per_zone_stats[zone] = 0
-
+    
+    print(zone_stats)
+    print(per_zone_stats)
     max_percentage = max(per_zone_stats.values())
     max_zone = find_key(max_percentage,per_zone_stats)
-    print(max_zone)
     coordinates[max_zone][0] += random.uniform(0,3)
     coordinates[max_zone][1] += random.uniform(0,3)
     
     return jsonify({"player_id": player_id,
-                    "percentage_success":zone_stats['percentage_success'],
-                    "percent_difference_average":zone_stats['percentage_difference_average'],
+                    "percentage_success":zone_stats[percent_succ],
+                    "percent_difference_average":zone_stats[percent_succ],
                     "zone":shot_zone,
                     "preferred_zone":max_zone,
                     "preferred_zone_percentage":max_percentage,
