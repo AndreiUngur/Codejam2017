@@ -32,6 +32,7 @@ While a whiteboard serves the purpose of communicating when and where players sh
 
 ![Screenshot](https://github.com/AndreiUngur/Codejam2017/blob/master/23772242_10212915047806745_1614297750_n.png "Screenshot of our project")
 
+
 We designed a simple prototype web application over the weekend to demonstrate the potential of a virtual play whiteboard. We choose this interface to appeal to the target market of NBA coaches and basketball players. 
 
 The interface allows for a coach to move players around and a convenient color coding scheme will tell the coach how effective that player shoots from that part of the floor. 
