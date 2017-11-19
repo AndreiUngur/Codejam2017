@@ -212,7 +212,7 @@ def get_player_percentage_from_zone(player_id):
     
     return jsonify({"player_id": player_id,
                     "percentage_success":zone_stats[percent_succ],
-                    "percent_difference_average":zone_stats[percent_succ],
+                    "percent_difference_average":zone_stats[percent_diff_avg],
                     "zone":shot_zone,
                     "preferred_zone":max_zone,
                     "preferred_zone_percentage":max_percentage,
