@@ -7,10 +7,10 @@ from exceptions import InvalidUsage
 import math
 import operator
 import zones
-import playerrecommend
-from playerrecommend import season_stats_fields as ssf
+#import playerrecommend
+#from playerrecommend import season_stats_fields as ssf
+#ssf.append('Name')
 import random
-ssf.append('Name')
 
 CONN = sqlalchemy.create_engine('sqlite:///data.db')
 app = create_app("development")
@@ -219,6 +219,7 @@ def get_team_players(team):
     players = CONN.execute(query,t=team).fetchall()
     return jsonify([map_keys_to_values(fields, player) for player in players])
 
+'''
 @app.route('/recommend/<player_name>')
 def get_recommendation(player_name):
     if not player_name:
@@ -227,7 +228,7 @@ def get_recommendation(player_name):
     player = CONN.execute(query, n=player_name).fetchone()
     cluster = get_cluster(player)
     return cluster
-
+'''
 def map_keys_to_values(keys, values):
     return {key : value for key, value in zip(keys, values)}
 
@@ -249,3 +250,4 @@ def handle_invalid_usage(error):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8886))
     app.run(host='0.0.0.0', port=port)
+    #app.run()
