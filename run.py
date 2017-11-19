@@ -138,6 +138,9 @@ def get_player_percentage_from_zone(player_id):
     made_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone,made_shot='Made Shot').fetchone()
     missed_shots = CONN.execute(query, p=player_id, shot_zone=shot_zone, made_shot='Missed Shot').fetchone()
 
+    if not made_shots or not missed_shots:
+        raise InvalidUsage('Could not find this player', status_code = 402)
+
     made_shots = int(made_shots.count)
     missed_shots = int(missed_shots.count)
 
